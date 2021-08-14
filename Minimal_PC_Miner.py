@@ -15,8 +15,7 @@ AVAILABLE_PORTS = [2812, 2813, 2814, 2815, 2816]
 soc = None
 
 username = "Tusharkant"
-diff_choice = input(
-    'Use lower difficulty? (Y/N) [Leave empty for default of True]\n> ')
+diff_choice = "n"
 if diff_choice.lower == "n":
     UseLowerDiff = False
 else:
