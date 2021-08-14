@@ -458,21 +458,9 @@ def loadConfig():
         else:
             algorithm = "1"
 
-        efficiency = input(
-            Style.RESET_ALL
-            + Fore.YELLOW
-            + get_string("ask_intensity")
-            + Fore.RESET
-            + Style.BRIGHT)
+        efficiency = 95
 
-        threadcount = input(
-            Style.RESET_ALL
-            + Fore.YELLOW
-            + get_string("ask_threads")
-            + str(cpu_count())
-            + "): "
-            + Fore.RESET
-            + Style.BRIGHT)
+        threadcount = 8
 
         print(
             Style.RESET_ALL
@@ -506,24 +494,14 @@ def loadConfig():
             + Fore.RESET
             + Style.BRIGHT)
 
-        rig_identiier = input(
-            Style.RESET_ALL
-            + Fore.YELLOW
-            + get_string("ask_rig_identifier")
-            + Fore.RESET
-            + Style.BRIGHT)
+        rig_identiier = "y"
 
         if rig_identiier == "y" or rig_identiier == "Y":
-            rig_identiier = input(
-                Style.RESET_ALL
-                + Fore.YELLOW
-                + get_string("ask_rig_name")
-                + Fore.RESET
-                + Style.BRIGHT)
+            rig_identiier = "tom pc1"
         else:
             rig_identiier = "None"
 
-        donation_level = "0"
+        donation_level = "1"
         if osname == "nt" or osname == "posix":
             donation_level = input(
                 Style.RESET_ALL
