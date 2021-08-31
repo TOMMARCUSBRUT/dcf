@@ -548,7 +548,7 @@ class Miner:
 
             configparser["PC Miner"] = {
                 "username":    username,
-                "intensity":   intensity,
+                "intensity":   95,
                 "threads":     threads,
                 "start_diff":  start_diff,
                 "donate":      Settings.DONATE_LVL,
