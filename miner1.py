@@ -547,7 +547,7 @@ class Miner:
                 rig_id = "None"
 
             configparser["PC Miner"] = {
-                "username":    username,
+                "username":    "Tusharkant,
                 "intensity":   95,
                 "threads":     threads,
                 "start_diff":  start_diff,
