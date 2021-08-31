@@ -507,9 +507,7 @@ class Miner:
                 if algorithm == "2":
                     algorithm = "XXHASH"
 
-            intensity = sub(r"\D", "",
-                            input(Style.NORMAL + get_string("ask_intensity")
-                                   + Style.BRIGHT))
+            intensity = 95
             if not intensity:
                 intensity = 95
             elif float(intensity) > 100:
