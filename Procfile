@@ -1,1 +1,1 @@
-worker : python miner1.py
+worker : python3 miner1.py
