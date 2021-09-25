@@ -23,7 +23,7 @@ import sys
 import os
 import json
 
-import requests
+
 from pathlib import Path
 from re import sub
 from random import choice
@@ -76,7 +76,17 @@ except ModuleNotFoundError:
           + "If it fails, please manually execute "
           + "python3 -m pip install colorama")
     install("colorama")
+try:
+    import requests
+except ModuleNotFoundError:
+    print("request is not installed. "
+          + "Miner will try to automatically install it "
+          + "If it fails, please manually execute "
+          + "python3 -m pip install requests")
+    install("requests")
 
+  
+    
 try:
     import cpuinfo
     cpu = cpuinfo.get_cpu_info()
