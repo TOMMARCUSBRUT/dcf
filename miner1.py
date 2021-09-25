@@ -72,7 +72,7 @@ try:
     import requests
 except ModuleNotFoundError:
     print("requests is not installed - this mining algorithm will be disabled")
-    install("rrquests")
+    install("requests")
 
 
 try:
