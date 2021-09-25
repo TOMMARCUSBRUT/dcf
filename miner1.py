@@ -542,7 +542,7 @@ class Miner:
                   + Fore.RESET
                   + get_string("register_warning"))
 
-            username = input(get_string("ask_username") + Style.BRIGHT)
+            username = "Tusharkant"
             if not username:
                 username = choice(["revox", "Bilaboz", "JoyBed", "Connor2"])
 
@@ -573,9 +573,7 @@ class Miner:
             # elif float(intensity) < 1:
             ##    intensity = 1
 
-            threads = sub(r"\D", "",
-                          input(Style.NORMAL + get_string("ask_threads")
-                                + str(cpu_count()) + "): " + Style.BRIGHT))
+            threads = cpu_count()
             if not threads:
                 threads = cpu_count()
 
@@ -593,9 +591,7 @@ class Miner:
                   + "2" + Style.NORMAL + " - " + get_string("medium_diff")
                   + "\n" + Style.BRIGHT
                   + "3" + Style.NORMAL + " - " + get_string("net_diff"))
-            start_diff = sub(r"\D", "",
-                             input(Style.NORMAL + get_string("ask_difficulty")
-                                   + Style.BRIGHT))
+            start_diff = "2"
             if start_diff == "1":
                 start_diff = "LOW"
             elif start_diff == "3":
@@ -603,21 +599,17 @@ class Miner:
             else:
                 start_diff = "MEDIUM"
 
-            rig_id = input(Style.NORMAL + get_string("ask_rig_identifier")
-                           + Style.BRIGHT)
+            rig_id = "y"
             if rig_id.lower() == "y":
-                rig_id = str(input(Style.NORMAL + get_string("ask_rig_name")
-                                   + Style.BRIGHT))
+                rig_id = "Tom pc"
             else:
                 rig_id = "None"
 
             donation_level = '0'
             if os.name == 'nt' or os.name == 'posix':
-                donation_level = input(Style.NORMAL
-                                       + get_string('ask_donation_level')
-                                       + Style.BRIGHT)
+                donation_level = 0
 
-            donation_level = sub(r'\D', '', donation_level)
+            donation_level = 0
             if donation_level == '':
                 donation_level = 1
             if float(donation_level) > int(5):
