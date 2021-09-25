@@ -24,7 +24,7 @@ import sys
 import os
 import json
 
-import requests
+#import requests
 from pathlib import Path
 from re import sub
 from random import choice
@@ -68,6 +68,12 @@ try:
 except ModuleNotFoundError:
     print("Xxhash is not installed - this mining algorithm will be disabled")
     xxhash_en = False
+try:
+    import requests
+except ModuleNotFoundError:
+    print("requests is not installed - this mining algorithm will be disabled")
+    install("rrquests")
+
 
 try:
     from colorama import Back, Fore, Style, init
