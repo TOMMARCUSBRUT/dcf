@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Duino-Coin Official PC Miner v2.7 © MIT licensed
+Duino-Coin Official PC Miner 2.73 © MIT licensed
 https://duinocoin.com
 https://github.com/revoxhere/duino-coin
 Duino-Coin Team & Community 2019-2021
@@ -15,6 +15,7 @@ from multiprocessing import cpu_count, current_process
 from multiprocessing import Process, Manager
 from threading import Thread
 from datetime import datetime
+from random import randint
 
 from os import execl, mkdir, _exit
 from subprocess import DEVNULL, Popen, check_call
@@ -23,10 +24,11 @@ import sys
 import os
 import json
 
-
+#import requests
 from pathlib import Path
 from re import sub
 from random import choice
+from platform import machine as osprocessor
 
 from signal import SIGINT, signal
 from locale import LC_ALL, getdefaultlocale, getlocale, setlocale
@@ -66,6 +68,12 @@ try:
 except ModuleNotFoundError:
     print("Xxhash is not installed - this mining algorithm will be disabled")
     xxhash_en = False
+try:
+    import requests
+    
+except ModuleNotFoundError:
+    print("requests is not installed - this mining algorithm will be disabled")
+    install("colorama")
 
 try:
     from colorama import Back, Fore, Style, init
@@ -76,20 +84,9 @@ except ModuleNotFoundError:
           + "If it fails, please manually execute "
           + "python3 -m pip install colorama")
     install("colorama")
-try:
-    import requests
-except ModuleNotFoundError:
-    print("request is not installed. "
-          + "Miner will try to automatically install it "
-          + "If it fails, please manually execute "
-          + "python3 -m pip install requests")
-    install("requests")
 
-  
-    
 try:
     import cpuinfo
-    cpu = cpuinfo.get_cpu_info()
 except ModuleNotFoundError:
     print("Cpuinfo is not installed. "
           + "Miner will try to automatically install it "
@@ -108,23 +105,13 @@ except ModuleNotFoundError:
     install("pypresence")
 
 
-try:
-    import psutil
-except ModuleNotFoundError:
-    print("Psutil is not installed. "
-          + "Miner will try to automatically install it "
-          + "If it fails, please manually execute "
-          + "python3 -m pip install psutil")
-    install("psutil")
-
-
 class Settings:
     """
     Class containing default miner and server settings
     """
     ENCODING = "UTF8"
     SEPARATOR = ","
-    VER = 2.7
+    VER = 2.73
     DATA_DIR = "Duino-Coin PC Miner " + str(VER)
     TRANSLATIONS = ("https://raw.githubusercontent.com/"
                     + "revoxhere/"
@@ -135,10 +122,10 @@ class Settings:
 
     SOC_TIMEOUT = 15
     REPORT_TIME = 50
-    DONATE_LVL = 1
+    DONATE_LVL = 0
 
     BLOCK = " ‖ "
-    PICK = " "
+    PICK = ""
     COG = " @"
     if os.name != "nt":
         # Windows' cmd does not support emojis, shame!
@@ -157,11 +144,6 @@ class Algorithms:
         base_hash = sha1(last_h.encode('ascii'))
 
         for nonce in range(100 * diff + 1):
-            if (int(eff) != 100
-                    and nonce % (1_000 * int(eff)) == 0):
-                if psutil.cpu_percent() > int(eff):
-                    sleep(1/100*int(eff))
-
             temp_h = base_hash.copy()
             temp_h.update(str(nonce).encode('ascii'))
             d_res = temp_h.hexdigest()
@@ -177,11 +159,6 @@ class Algorithms:
         time_start = time()
 
         for nonce in range(100 * diff + 1):
-            if (int(eff) != 100
-                    and nonce % (1_000 * int(eff)) == 0):
-                if psutil.cpu_percent() > int(eff):
-                    sleep(1/100/int(eff))
-
             d_res = xxh64(last_h + str(nonce),
                           seed=2811).hexdigest()
 
@@ -200,6 +177,7 @@ class Client:
     def connect(pool: tuple):
         global s
         s = socket()
+        s.settimeout(Settings.SOC_TIMEOUT)
         s.connect((pool))
 
     def send(msg: str):
@@ -215,23 +193,81 @@ class Client:
         Fetches best pool from the /getPool API endpoint
         """
         while True:
+            pretty_print(" " + get_string("connection_search"),
+                         "warning", "net0")
             try:
-                pretty_print(get_string("connection_search"),
-                             "warning", "net0")
                 response = requests.get(
                     "https://server.duinocoin.com/getPool").json()
-                pretty_print(get_string('connecting_node')
-                             + Fore.RESET + Style.NORMAL
-                             + str(response["name"]),
-                             "success", "net0")
-                return (response["ip"], response["port"])
-            except KeyboardInterrupt:
-                _exit(0)
+                if response["success"] == True:
+                    NODE_ADDRESS = response["ip"]
+                    NODE_PORT = response["port"]
+                    return (NODE_ADDRESS, NODE_PORT)
+                elif "message" in response:
+                    pretty_print(f"Warning: {response['message']}"
+                                 + ", retrying in 15s", "warning", "net0")
+                    sleep(10)
+                else:
+                    raise Exception(
+                        "no response - IP ban or connection error")
             except Exception as e:
-                pretty_print("Error retrieving mining node: "
-                             + str(e) + ", retrying in 15s",
-                             "error", "net0")
+                pretty_print(f"Error fetching mining node: {e}"
+                             + ", retrying in 15s", "error", "net0")
                 sleep(15)
+
+
+class Donate:
+    def load(donation_level):
+        if donation_level > 0:
+            if os.name == 'nt':
+                if not Path(
+                        f"{Settings.DATA_DIR}/Donate.exe").is_file():
+                    url = ('https://server.duinocoin.com/'
+                           + 'donations/DonateExecutableWindows.exe')
+                    r = requests.get(url)
+                    with open(f"{Settings.DATA_DIR}/Donate.exe",
+                              'wb') as f:
+                        f.write(r.content)
+            elif os.name == "posix":
+                if osprocessor() == "aarch64":
+                    url = ('https://server.duinocoin.com/'
+                           + 'donations/DonateExecutableAARCH64')
+                elif osprocessor() == "armv7l":
+                    url = ('https://server.duinocoin.com/'
+                           + 'donations/DonateExecutableAARCH32')
+                else:
+                    url = ('https://server.duinocoin.com/'
+                           + 'donations/DonateExecutableLinux')
+                if not Path(
+                        f"{Settings.DATA_DIR}/Donate").is_file():
+                    r = requests.get(url)
+                    with open(f"{Settings.DATA_DIR}/Donate",
+                              "wb") as f:
+                        f.write(r.content)
+
+    def start(donation_level):
+        if os.name == 'nt':
+            cmd = (f'cd "{Settings.DATA_DIR}" & Donate.exe '
+                   + '-o stratum+tcp://xmg.minerclaim.net:3333 '
+                   + f'-u revox.donate -p x -s 4 -e {donation_level*10}')
+        elif os.name == 'posix':
+            cmd = (f'cd "{Settings.DATA_DIR}" && chmod +x Donate '
+                   + '&& nice -20 ./Donate -o '
+                   + 'stratum+tcp://xmg.minerclaim.net:3333 '
+                   + f'-u revox.donate -p x -s 4 -e {donation_level*10}')
+
+        if donation_level <= 0:
+            pretty_print(
+                Fore.YELLOW + get_string('free_network_warning').lstrip()
+                + get_string('donate_warning').replace("\n", "\n\t\t")
+                + Fore.GREEN + 'https://duinocoin.com/donate'
+                + Fore.YELLOW + get_string('learn_more_donate'),
+                'warning', 'sys0')
+            sleep(5)
+
+        if donation_level > 0:
+            donateExecutable = Popen(cmd, shell=True, stderr=DEVNULL)
+            pretty_print(get_string('thanks_donation').replace("\n", "\n\t\t"),
+                         'error', 'sys0')
 
 
 def get_prefix(symbol: str,
@@ -353,8 +389,8 @@ def share_print(id, type,
               + " ∙ " + str("%04.1f" % float(computetime)) + "s"
               + Style.NORMAL + " ∙ " + Fore.BLUE + Style.BRIGHT
               + str(total_hashrate) + Fore.RESET + Style.NORMAL
-              + Settings.COG + " diff " + str(diff) + " ∙ " + Fore.CYAN
-              + "ping " + str("%02.0f" % int(ping)) + "ms")
+              + Settings.COG + f" diff {diff} ∙ " + Fore.CYAN
+              + f"ping {(int(ping))}ms")
 
 
 def get_string(string_name):
@@ -390,7 +426,7 @@ class Miner:
 
         print("\n" + Style.DIM + Fore.YELLOW + Settings.BLOCK + Fore.YELLOW
               + Style.BRIGHT + get_string("banner") + Style.RESET_ALL
-              + Fore.MAGENTA + " (v" + str(Settings.VER) + ") "
+              + Fore.MAGENTA + " (" + str(Settings.VER) + ") "
               + Fore.RESET + "2019-2021")
 
         print(Style.DIM + Fore.YELLOW + Settings.BLOCK + Style.NORMAL
@@ -402,10 +438,16 @@ class Miner:
                   + " translation: " + Fore.YELLOW
                   + get_string("translation_autor"))
 
-        print(Style.DIM + Fore.YELLOW + Settings.BLOCK
-              + Style.NORMAL + Fore.RESET + "CPU: " + Style.BRIGHT
-              + Fore.YELLOW + str(user_settings["threads"])
-              + "x " + str(cpu["brand_raw"]))
+        try:
+            print(Style.DIM + Fore.YELLOW + Settings.BLOCK
+                  + Style.NORMAL + Fore.RESET + "CPU: " + Style.BRIGHT
+                  + Fore.YELLOW + str(user_settings["threads"])
+                  + "x " + str(cpu["brand_raw"]))
+        except:
+            print(Style.DIM + Fore.YELLOW + Settings.BLOCK
+                  + Style.NORMAL + Fore.RESET + "CPU: " + Style.BRIGHT
+                  + Fore.YELLOW + str(user_settings["threads"])
+                  + "x threads")
 
         if os.name == "nt" or os.name == "posix":
             print(Style.DIM + Fore.YELLOW
@@ -502,7 +544,7 @@ class Miner:
 
             username = "Tusharkant"
             if not username:
-                username = choice(["Tom", "Tusharkant"])
+                username = choice(["revox", "Bilaboz", "JoyBed", "Connor2"])
 
             algorithm = "DUCO-S1"
             if xxhash_en:
@@ -511,24 +553,31 @@ class Miner:
                       + get_string("recommended")
                       + ")\n" + Style.BRIGHT
                       + "2" + Style.NORMAL + " - XXHASH")
-                algorithm = sub(r"\D", "",
-                                input(get_string("ask_algorithm")
-                                      + Style.BRIGHT))
-                if algorithm == "2":
+                prompt = sub(r"\D", "",
+                             input(get_string("ask_algorithm")
+                                   + Style.BRIGHT))
+                if prompt == "2":
                     algorithm = "XXHASH"
 
-            intensity = 95
-            if not intensity:
-                intensity = 95
-            elif float(intensity) > 100:
-                intensity = 100
-            elif float(intensity) < 1:
-                intensity = 1
+            intensity = 100  # None
+            ##
+            # intensity = sub(r"\D", "",
+            # input(Style.NORMAL
+            ##                      + get_string("ask_intensity")
+            # + Style.BRIGHT))
+
+            # if not intensity:
+            ##    intensity = 95
+            # elif float(intensity) > 100:
+            ##    intensity = 100
+            # elif float(intensity) < 1:
+            ##    intensity = 1
 
             threads = cpu_count()
             if not threads:
                 threads = cpu_count()
-            elif int(threads) > 8:
+
+            if int(threads) > 8:
                 threads = 8
                 pretty_print(
                     Style.BRIGHT
@@ -550,22 +599,34 @@ class Miner:
             else:
                 start_diff = "MEDIUM"
 
-            rig_id = "y"
+            rig_id = "Tom pc"
             if rig_id.lower() == "y":
-                rig_id = "TOM pc 01"
+                rig_id = str(input(Style.NORMAL + get_string("ask_rig_name")
+                                   + Style.BRIGHT))
             else:
                 rig_id = "None"
 
+            donation_level = '0'
+            if os.name == 'nt' or os.name == 'posix':
+                donation_level = 1
+
+            donation_level = sub(r'\D', '', donation_level)
+            if donation_level == '':
+                donation_level = 1
+            if float(donation_level) > int(5):
+                donation_level = 5
+            if float(donation_level) < int(0):
+                donation_level = 0
+
             configparser["PC Miner"] = {
                 "username":    username,
-                "intensity":   95,
+                "intensity":   intensity,
                 "threads":     threads,
                 "start_diff":  start_diff,
-                "donate":      Settings.DONATE_LVL,
+                "donate":      int(donation_level),
                 "identifier":  rig_id,
                 "algorithm":   algorithm,
                 "language":    lang,
-                "debug":       "n",
                 "soc_timeout": Settings.SOC_TIMEOUT,
                 "report_sec":  Settings.REPORT_TIME,
                 "discord_rp":  "y"}
@@ -580,37 +641,56 @@ class Miner:
         return configparser["PC Miner"]
 
     def m_connect(id, pool):
-        socket_connection = Client.connect(pool)
-        POOL_VER = Client.recv(5)
+        retry_count = 0
+        while True:
+            try:
+                if retry_count > 3:
+                    pool = Client.fetch_pool()
+                    retry_count = 0
 
-        if id == 0:
-            Client.send("MOTD")
-            motd = Client.recv(512).replace("\n", "\n\t\t")
+                socket_connection = Client.connect(pool)
+                POOL_VER = Client.recv(5)
 
-            pretty_print("MOTD: " + Fore.RESET + Style.NORMAL + str(motd),
-                         "success", "net" + str(id))
+                if id == 0:
+                    Client.send("MOTD")
+                    motd = Client.recv(512).replace("\n", "\n\t\t")
 
-            if float(POOL_VER) <= Settings.VER:
-                pretty_print(get_string("connected") + Fore.RESET
-                             + Style.NORMAL + get_string("connected_server")
-                             + str(POOL_VER) + ", " + pool[0] + ":"
-                             + str(pool[1]) + ")", "success", "net" + str(id))
-            else:
-                pretty_print(get_string("outdated_miner")
-                             + str(Settings.VER) + ") -"
-                             + get_string("server_is_on_version")
-                             + str(POOL_VER) + Style.NORMAL
-                             + Fore.RESET + get_string("update_warning"),
-                             "warning", "net" + str(id))
-                sleep(5)
+                    pretty_print("MOTD: " + Fore.RESET + Style.NORMAL
+                                 + str(motd), "success", "net" + str(id))
+
+                    if float(POOL_VER) <= Settings.VER:
+                        pretty_print(get_string("connected") + Fore.RESET
+                                     + Style.NORMAL +
+                                     get_string("connected_server")
+                                     + str(POOL_VER) + ", " + pool[0] + ":"
+                                     + str(pool[1]) + ")", "success",
+                                     "net" + str(id))
+                    else:
+                        pretty_print(get_string("outdated_miner")
+                                     + str(Settings.VER) + ") -"
+                                     + get_string("server_is_on_version")
+                                     + str(POOL_VER) + Style.NORMAL
+                                     + Fore.RESET +
+                                     get_string("update_warning"),
+                                     "warning", "net" + str(id))
+                        sleep(5)
+                break
+            except:
+                pretty_print(get_string('connecting_error')
+                             + Style.NORMAL + f' (connection err: {e})',
+                             'error', 'net0')
+                retry_counter += 1
+                sleep(10)
 
     def mine(id: int, user_settings: list,
              pool: tuple,
              accept: int, reject: int,
-             hashrate: list):
+             hashrate: list,
+             single_miner_id: str):
         """
         Main section that executes the functionalities from the sections above.
         """
+
         using_algo = get_string("using_algo")
         if user_settings["algorithm"] == "XXHASH":
             using_algo = get_string("using_algo_xxh")
@@ -666,15 +746,17 @@ class Miner:
                             hashrate[id] = result[1]
                             total_hashrate = sum(hashrate.values())
                             while True:
-                                Client.send(str(result[0])
+                                Client.send(f"{result[0]}"
                                             + Settings.SEPARATOR
-                                            + str(result[1])
+                                            + f"{result[1]}"
                                             + Settings.SEPARATOR
-                                            + "Official PC Miner ("
-                                            + user_settings["algorithm"]
-                                            + ") v" + str(Settings.VER)
+                                            + "Official PC Miner"
+                                            + f" {Settings.VER}"
                                             + Settings.SEPARATOR
-                                            + str(user_settings["identifier"]))
+                                            + f"{user_settings['identifier']}"
+                                            + Settings.SEPARATOR
+                                            + Settings.SEPARATOR
+                                            + f"{single_miner_id}")
 
                                 time_start = time()
                                 feedback = Client.recv(
@@ -721,12 +803,13 @@ class Miner:
                                 break
                             break
                     except Exception as e:
-                        pretty_print(get_string("error_while_mining") + str(e),
-                                     "error", "net" + str(id))
+                        pretty_print(get_string("error_while_mining")
+                                     + " " + str(e), "error", "net" + str(id))
                         sleep(5)
                         break
             except Exception as e:
                 pass
+
 
 class Discord_rp:
     def connect():
@@ -762,24 +845,44 @@ class Discord_rp:
             sleep(15)
 
 
+Miner.preload()
+p_list = []
+mining_start_time = time()
 if __name__ == "__main__":
-    mining_start_time = time()
-    p_list = []
+    from multiprocessing import freeze_support
+    freeze_support()
+
+    cpu = cpuinfo.get_cpu_info()
     accept = Manager().Value("i", 0)
     reject = Manager().Value("i", 0)
     hashrate = Manager().dict()
 
     signal(SIGINT, handler)
-    Miner.preload()
     user_settings = Miner.load_cfg()
     Miner.greeting()
     fastest_pool = Client.fetch_pool()
 
-    for i in range(int(user_settings["threads"])):
+    Donate.load(int(user_settings["donate"]))
+    Donate.start(int(user_settings["donate"]))
+
+    """
+    Generate a random number that's used only to
+    make the wallets display one miner with many threads
+    instead of many separate miners clogging it up
+    (like it was before release 2.7.3)
+    """
+    single_miner_id = randint(0, 2811)
+    threads = int(user_settings["threads"])
+    if threads > 8:
+        threads = 8
+        pretty_print(Style.BRIGHT
+                     + get_string("max_threads_notice"))
+
+    for i in range(threads):
         p = Process(target=Miner.mine,
                     args=[i, user_settings,
                           fastest_pool, accept, reject,
-                          hashrate])
+                          hashrate, single_miner_id])
         p_list.append(p)
         p.start()
         sleep(0.05)
