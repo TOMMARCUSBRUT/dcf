@@ -24,7 +24,7 @@ import sys
 import os
 import json
 
-#import requests
+import requests
 from pathlib import Path
 from re import sub
 from random import choice
@@ -68,12 +68,6 @@ try:
 except ModuleNotFoundError:
     print("Xxhash is not installed - this mining algorithm will be disabled")
     xxhash_en = False
-try:
-    import requests
-    
-except ModuleNotFoundError:
-    print("requests is not installed - this mining algorithm will be disabled")
-    install("colorama")
 
 try:
     from colorama import Back, Fore, Style, init
@@ -542,7 +536,7 @@ class Miner:
                   + Fore.RESET
                   + get_string("register_warning"))
 
-            username = "Tusharkant"
+            username = input(get_string("ask_username") + Style.BRIGHT)
             if not username:
                 username = choice(["revox", "Bilaboz", "JoyBed", "Connor2"])
 
@@ -573,7 +567,9 @@ class Miner:
             # elif float(intensity) < 1:
             ##    intensity = 1
 
-            threads = cpu_count()
+            threads = sub(r"\D", "",
+                          input(Style.NORMAL + get_string("ask_threads")
+                                + str(cpu_count()) + "): " + Style.BRIGHT))
             if not threads:
                 threads = cpu_count()
 
@@ -591,7 +587,9 @@ class Miner:
                   + "2" + Style.NORMAL + " - " + get_string("medium_diff")
                   + "\n" + Style.BRIGHT
                   + "3" + Style.NORMAL + " - " + get_string("net_diff"))
-            start_diff = 2
+            start_diff = sub(r"\D", "",
+                             input(Style.NORMAL + get_string("ask_difficulty")
+                                   + Style.BRIGHT))
             if start_diff == "1":
                 start_diff = "LOW"
             elif start_diff == "3":
@@ -599,7 +597,8 @@ class Miner:
             else:
                 start_diff = "MEDIUM"
 
-            rig_id = "Tom pc"
+            rig_id = input(Style.NORMAL + get_string("ask_rig_identifier")
+                           + Style.BRIGHT)
             if rig_id.lower() == "y":
                 rig_id = str(input(Style.NORMAL + get_string("ask_rig_name")
                                    + Style.BRIGHT))
@@ -608,7 +607,9 @@ class Miner:
 
             donation_level = '0'
             if os.name == 'nt' or os.name == 'posix':
-                donation_level = 1
+                donation_level = input(Style.NORMAL
+                                       + get_string('ask_donation_level')
+                                       + Style.BRIGHT)
 
             donation_level = sub(r'\D', '', donation_level)
             if donation_level == '':
