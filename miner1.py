@@ -160,7 +160,11 @@ class Algorithms:
 
         return [0, 0]
 
-    def XXHASH(last_h: str, exp_h: str, diff: int,  eff: int):
+    def XXHASH(last,exp, difff,  efff):
+        last_h= str(last)
+        exp_h=str(exp)
+        diff=int(difff)
+        eff=int(efff)
         time_start = time()
 
         for nonce in range(100 * diff + 1):
