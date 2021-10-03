@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 #"""
 #Duino-Coin Official PC Miner 2.73 © MIT licensed
