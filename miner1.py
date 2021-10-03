@@ -183,17 +183,20 @@ class Client:
     """
     Class helping to organize socket connections
     """
-    def connect(pool: tuple):
+    def connect(poool):
+        pool=tuple(poool)
         global s
         s = socket()
         s.settimeout(Settings.SOC_TIMEOUT)
         s.connect((pool))
 
-    def send(msg: str):
+    def send(msge):
+        msg=str(msge)
         sent = s.sendall(str(msg).encode(Settings.ENCODING))
         return True
 
-    def recv(limit: int = 128):
+    def recv(limit = 128):
+        limit=int(limitt)
         data = s.recv(limit).decode(Settings.ENCODING).rstrip("\n")
         return data
 
