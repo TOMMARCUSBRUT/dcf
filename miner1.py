@@ -140,7 +140,11 @@ class Algorithms:
     For more info about the implementation refer to the Duino whitepaper:
     https://github.com/revoxhere/duino-coin/blob/gh-pages/assets/whitepaper.pdf
     """
-    def DUCOS1(last_h: str, exp_h: str, diff: int, eff: int):
+    def DUCOS1(last, exp_h, difff, efff):
+        last_h= str(last)
+        exp_h=str(exp)
+        diff=int(difff)
+        eff=int(efff)
         time_start = time()
         base_hash = sha1(last_h.encode('ascii'))
 
