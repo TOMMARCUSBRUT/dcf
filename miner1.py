@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#"""
-#Duino-Coin Official PC Miner 2.73 © MIT licensed
-#https://duinocoin.com
-#https://github.com/revoxhere/duino-coin
-#Duino-Coin Team & Community 2019-2021
-#"""
+"""
+Duino-Coin Official PC Miner 2.73 © MIT licensed
+https://duinocoin.com
+https://github.com/revoxhere/duino-coin
+Duino-Coin Team & Community 2019-2021
+"""
 
 from time import time, sleep, strptime, ctime
 from hashlib import sha1
@@ -25,7 +24,7 @@ import sys
 import os
 import json
 
-#import requests
+import requests
 from pathlib import Path
 from re import sub
 from random import choice
@@ -69,12 +68,6 @@ try:
 except ModuleNotFoundError:
     print("Xxhash is not installed - this mining algorithm will be disabled")
     xxhash_en = False
-try:
-    import requests
-except ModuleNotFoundError:
-    print("requests is not installed - this mining algorithm will be disabled")
-    install("requests")
-
 
 try:
     from colorama import Back, Fore, Style, init
@@ -128,7 +121,7 @@ class Settings:
     BLOCK = " ‖ "
     PICK = ""
     COG = " @"
-    if os.name != "nt":
+    if os.name != "nt" or bool(os.name == "nt" and os.environ.get("WT_SESSION")):
         # Windows' cmd does not support emojis, shame!
         PICK = " ⛏"
         COG = " ⚙"
@@ -140,11 +133,7 @@ class Algorithms:
     For more info about the implementation refer to the Duino whitepaper:
     https://github.com/revoxhere/duino-coin/blob/gh-pages/assets/whitepaper.pdf
     """
-    def DUCOS1(last, exp_h, difff, efff):
-        last_h= str(last)
-        exp_h=str(exp)
-        diff=int(difff)
-        eff=int(efff)
+    def DUCOS1(last_h: str, exp_h: str, diff: int, eff: int):
         time_start = time()
         base_hash = sha1(last_h.encode('ascii'))
 
@@ -160,11 +149,7 @@ class Algorithms:
 
         return [0, 0]
 
-    def XXHASH(last,exp, difff,  efff):
-        last_h= str(last)
-        exp_h=str(exp)
-        diff=int(difff)
-        eff=int(efff)
+    def XXHASH(last_h: str, exp_h: str, diff: int,  eff: int):
         time_start = time()
 
         for nonce in range(100 * diff + 1):
@@ -183,20 +168,17 @@ class Client:
     """
     Class helping to organize socket connections
     """
-    def connect(poool):
-        pool=tuple(poool)
+    def connect(pool: tuple):
         global s
         s = socket()
         s.settimeout(Settings.SOC_TIMEOUT)
         s.connect((pool))
 
-    def send(msge):
-        msg=str(msge)
+    def send(msg: str):
         sent = s.sendall(str(msg).encode(Settings.ENCODING))
         return True
 
-    def recv(limit = 128):
-        limit=int(limitt)
+    def recv(limit: int = 128):
         data = s.recv(limit).decode(Settings.ENCODING).rstrip("\n")
         return data
 
@@ -215,15 +197,15 @@ class Client:
                     NODE_PORT = response["port"]
                     return (NODE_ADDRESS, NODE_PORT)
                 elif "message" in response:
-                    pretty_print(f"Warning: {response['message']}
-                                 , retrying in 15s, warning, net0")
-                                 
+                    pretty_print(f"Warning: {response['message']}"
+                                 + ", retrying in 15s", "warning", "net0")
                     sleep(10)
                 else:
-                    raise Exception("no response - IP ban or connection error")
+                    raise Exception(
+                        "no response - IP ban or connection error")
             except Exception as e:
-                pretty_print(f"Error fetching mining node: {e}" + ", retrying in 15s", "error", "net0")
-                            
+                pretty_print(f"Error fetching mining node: {e}"
+                             + ", retrying in 15s", "error", "net0")
                 sleep(15)
 
 
@@ -554,7 +536,7 @@ class Miner:
                   + Fore.RESET
                   + get_string("register_warning"))
 
-            username = "Tusharkant"
+            username = Tusharkant
             if not username:
                 username = choice(["revox", "Bilaboz", "JoyBed", "Connor2"])
 
@@ -585,7 +567,7 @@ class Miner:
             # elif float(intensity) < 1:
             ##    intensity = 1
 
-            threads = cpu_count()
+            threads =cpu_count()
             if not threads:
                 threads = cpu_count()
 
@@ -603,7 +585,9 @@ class Miner:
                   + "2" + Style.NORMAL + " - " + get_string("medium_diff")
                   + "\n" + Style.BRIGHT
                   + "3" + Style.NORMAL + " - " + get_string("net_diff"))
-            start_diff = "2"
+            start_diff = sub(r"\D", "",
+                             input(Style.NORMAL + get_string("ask_difficulty")
+                                   + Style.BRIGHT))
             if start_diff == "1":
                 start_diff = "LOW"
             elif start_diff == "3":
@@ -611,17 +595,18 @@ class Miner:
             else:
                 start_diff = "MEDIUM"
 
-            rig_id = "y"
+            rig_id = 'tomcloud'
             if rig_id.lower() == "y":
-                rig_id = "Tom pc"
+                rig_id = str(input(Style.NORMAL + get_string("ask_rig_name")
+                                   + Style.BRIGHT))
             else:
                 rig_id = "None"
 
-            donation_level = '0'
+            donation_level = '1'
             if os.name == 'nt' or os.name == 'posix':
-                donation_level = 0
+                donation_level = 1
 
-            donation_level = 0
+            donation_level =1
             if donation_level == '':
                 donation_level = 1
             if float(donation_level) > int(5):
