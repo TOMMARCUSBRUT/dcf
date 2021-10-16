@@ -547,9 +547,7 @@ class Miner:
                       + get_string("recommended")
                       + ")\n" + Style.BRIGHT
                       + "2" + Style.NORMAL + " - XXHASH")
-                prompt = sub(r"\D", "",
-                             input(get_string("ask_algorithm")
-                                   + Style.BRIGHT))
+                prompt = 2
                 if prompt == "2":
                     algorithm = "XXHASH"
 
@@ -585,9 +583,7 @@ class Miner:
                   + "2" + Style.NORMAL + " - " + get_string("medium_diff")
                   + "\n" + Style.BRIGHT
                   + "3" + Style.NORMAL + " - " + get_string("net_diff"))
-            start_diff = sub(r"\D", "",
-                             input(Style.NORMAL + get_string("ask_difficulty")
-                                   + Style.BRIGHT))
+            start_diff = 2
             if start_diff == "1":
                 start_diff = "LOW"
             elif start_diff == "3":
